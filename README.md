@@ -1,39 +1,82 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# flutter_chips_input2
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages).
+Flutter library for building input fields with InputChips as input options.
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages).
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
-
-## Features
-
-TODO: List what your package can do. Maybe include images, gifs, or videos.
-
-## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
 
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
+### Installation
+
+Follow installation instructions [here](https://pub.dartlang.org/packages/flutter_chips_input2#-installing-tab-)
+
+### Import
 
 ```dart
-const like = 'sample';
+import 'package:flutter_chips_input2/flutter_chips_input2.dart';
 ```
 
-## Additional information
+### Example
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+#### ChipsInput
+
+```dart
+ChipsInput(
+    initialValue: [
+        AppProfile('John Doe', 'jdoe@flutter.io', 'https://d2gg9evh47fn9z.cloudfront.net/800px_COLOURBOX4057996.jpg')
+    ],
+    decoration: InputDecoration(
+        labelText: "Select People",
+    ),
+    maxChips: 3,
+    findSuggestions: (String query) {
+        if (query.length != 0) {
+            var lowercaseQuery = query.toLowerCase();
+            return mockResults.where((profile) {
+                return profile.name.toLowerCase().contains(query.toLowerCase()) || profile.email.toLowerCase().contains(query.toLowerCase());
+            }).toList(growable: false)
+                ..sort((a, b) => a.name
+                    .toLowerCase()
+                    .indexOf(lowercaseQuery)
+                    .compareTo(b.name.toLowerCase().indexOf(lowercaseQuery)));
+        } else {
+            return const <AppProfile>[];
+        }
+    },
+    onChanged: (data) {
+        print(data);
+    },
+    chipBuilder: (context, state, profile) {
+        return InputChip(
+            key: ObjectKey(profile),
+            label: Text(profile.name),
+            avatar: CircleAvatar(
+                backgroundImage: NetworkImage(profile.imageUrl),
+            ),
+            onDeleted: () => state.deleteChip(profile),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        );
+    },
+    suggestionBuilder: (context, state, profile) {
+        return ListTile(
+            key: ObjectKey(profile),
+            leading: CircleAvatar(
+                backgroundImage: NetworkImage(profile.imageUrl),
+            ),
+            title: Text(profile.name),
+            subtitle: Text(profile.email),
+            onTap: () => state.selectSuggestion(profile),
+        );
+    },
+)
+```
+
+## To-do list
+
+- [x] Ability to limit the number of chips
+- [x] Overlay doesn't move when input height changes i.e. when chips wrap
+- [ ] Create a `FormField` implementation (`ChipsInputField`) to be used within Flutter Form Widget
+
+## Known Issues
+
+- Deleting chips with keyboard on IOS makes app to crush (Flutter Issue with special characters used as replacement characters). Already reported [#1](https://github.com/danvick/flutter_chips_input/issues/1)
+- For some reason Overlay floats above AppBar when scrolling
